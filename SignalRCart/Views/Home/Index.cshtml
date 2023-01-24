@@ -1,0 +1,43 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="container" style="padding-top:5rem;">
+    <h4 id="cartcount">Cart Count : @Model</h4>
+    <a href="~/home/add" class="btn btn-success" role="button">Add</a><br/><br />
+    <a href="~/home/remove" class="btn btn-warning" role="button">Remove</a>
+</div>
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/jquery.signalR-2.2.2.min.js"></script>
+<script src="~/signalr/hubs" type="text/javascript"></script>
+
+<script type="text/javascript">
+    // Declare a proxy to reference the hub.
+    var chat = $.connection.cartHub;
+    $.connection.hub.logging = true;
+    // Start the connection.
+    $.connection.hub.start()
+        .done(function () {
+            console.log('Now connected, connection ID=' + chat.connection.id);
+            chat.server.send(@Model, "user");
+        })
+        .fail(function () { console.log('Could not Connect!'); });
+
+    $.connection.hub.error(function (error) {
+        console.log('SignalR error: ' + error)
+    });
+
+    $.connection.hub.disconnected(function () {
+        if ($.connection.hub.lastError) { alert("Disconnected. Reason: " + $.connection.hub.lastError.message); }
+        setTimeout(function () {
+            $.connection.hub.start();
+        }, 5000); // Restart connection after 5 seconds.
+    });
+
+    // Create a function that the hub can call to broadcast messages.
+    chat.client.updateCartCount = function (count, user) {
+        // Add the cart count to the page.
+        $('#cartcount').html('Cart Count : ' + count);
+    };
+</script>
